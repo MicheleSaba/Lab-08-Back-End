@@ -10,7 +10,6 @@ const superagent = require('superagent');
 const cors = require('cors');
 const pg = require('pg');
 
-const PORT = process.env.PORT;
 const client = new pg.Client(process.env.DATABASE_URL);
 client.connect();
 client.on('err', err => console.log(err));
@@ -73,7 +72,7 @@ Location.prototype.save = function() {
 
 
 Location.fetchLocation = (query) => {
-  const _URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${request.query.data}&key=${process.env.GEOCODE_API_KEY}`;
+  const _URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${process.env.GEOCODE_API_KEY}`;
   return superagent.get(_URL)
   .then (data => {
     console.log('Got data from API');
@@ -81,18 +80,17 @@ Location.fetchLocation = (query) => {
     else {
       let location = new Location(query, data.body.results[0]);
       return location.save()
-      .then ( result => {
+      .then (result => {
         location.id = result.rows[0].id;
       return location;
       });
-    return location;
     }
   });
 };
 
 Location.lookupLocation = (handler) => {
   const SQL = `SELECT * FROM locations WHERE search_query=$1`;
-  const values = [handle.query];
+  const values = [handler.query];
 
   return client.query(SQL, values)
   .then ( results => {
